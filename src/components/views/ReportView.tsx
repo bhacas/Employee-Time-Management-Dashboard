@@ -3,8 +3,12 @@ import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameMo
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon } from 'lucide-react';
 import { useTimeEntries } from '../../context/TimeEntriesContext';
+import { useAuth } from '../../context/AuthContext';
+
 const ReportView: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const { user } = useAuth();
+
   const {
     getMonthlyEntries,
     getDailyEntries
@@ -15,7 +19,7 @@ const ReportView: React.FC = () => {
     start: monthStart,
     end: monthEnd
   });
-  const monthlyEntries = getMonthlyEntries(selectedDate);
+  const monthlyEntries = getMonthlyEntries(selectedDate, user?.id);
   const goToPreviousMonth = () => {
     setSelectedDate(prevDate => subMonths(prevDate, 1));
   };
@@ -45,7 +49,7 @@ const ReportView: React.FC = () => {
   }).sort((a, b) => b.totalHours - a.totalHours);
   // Prepare data for daily chart
   const chartData = daysInMonth.map(day => {
-    const dayEntries = getDailyEntries(day);
+    const dayEntries = getDailyEntries(day, user?.id);
     const totalMinutes = dayEntries.reduce((sum, entry) => sum + entry.duration, 0);
     const totalHours = totalMinutes / 60;
     return {

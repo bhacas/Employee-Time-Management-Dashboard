@@ -1,6 +1,7 @@
 import React, { useEffect, useState, createContext, useContext } from 'react';
 import { format, parseISO, startOfMonth, endOfMonth, startOfWeek, endOfWeek, startOfDay, endOfDay } from 'date-fns';
 import { useAuth } from './AuthContext';
+
 export interface TimeEntry {
   id: string;
   userId: string;
@@ -24,60 +25,8 @@ interface TimeEntriesContextType {
   getAllTeamEntries: () => TimeEntry[];
 }
 const TimeEntriesContext = createContext<TimeEntriesContextType | undefined>(undefined);
-// Generate sample entries for a user
-const generateSampleEntries = (userId: string): TimeEntry[] => {
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const twoDaysAgo = new Date(today);
-  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-  return [{
-    id: `${userId}_1`,
-    userId,
-    date: format(today, 'yyyy-MM-dd'),
-    startTime: '09:00',
-    endTime: '12:30',
-    description: 'Project planning',
-    duration: 210,
-    project: 'Website Redesign'
-  }, {
-    id: `${userId}_2`,
-    userId,
-    date: format(today, 'yyyy-MM-dd'),
-    startTime: '13:30',
-    endTime: '17:00',
-    description: 'Development work',
-    duration: 210,
-    project: 'Website Redesign'
-  }, {
-    id: `${userId}_3`,
-    userId,
-    date: format(yesterday, 'yyyy-MM-dd'),
-    startTime: '09:00',
-    endTime: '17:00',
-    description: 'Client meeting and follow-up',
-    duration: 480,
-    project: 'Client Onboarding'
-  }, {
-    id: `${userId}_4`,
-    userId,
-    date: format(twoDaysAgo, 'yyyy-MM-dd'),
-    startTime: '10:00',
-    endTime: '16:00',
-    description: 'Documentation and testing',
-    duration: 360,
-    project: 'API Integration'
-  }];
-};
-// Generate sample data for all team members
-const generateTeamData = (teamMemberIds: string[]): TimeEntry[] => {
-  let allEntries: TimeEntry[] = [];
-  teamMemberIds.forEach(userId => {
-    const userEntries = generateSampleEntries(userId);
-    allEntries = [...allEntries, ...userEntries];
-  });
-  return allEntries;
-};
+export const API_URL = import.meta.env.VITE_API_URL;
+
 export const TimeEntriesProvider: React.FC<{
   children: React.ReactNode;
 }> = ({
@@ -90,28 +39,32 @@ export const TimeEntriesProvider: React.FC<{
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   // Load entries when user changes
   useEffect(() => {
-    if (user) {
-      // In a real app, this would fetch from an API
-      // For now, use sample data
-      const storedEntries = localStorage.getItem(`timeEntries_${user.id}`);
-      if (storedEntries) {
-        setEntries(JSON.parse(storedEntries));
-      } else {
-        // If user is a manager, generate entries for all team members
-        if (user.role === 'manager' && user.teamMembers) {
-          const teamEntries = generateTeamData([user.id, ...user.teamMembers]);
-          setEntries(teamEntries);
-          localStorage.setItem(`timeEntries_${user.id}`, JSON.stringify(teamEntries));
-        } else {
-          // Regular employee entries
-          const sampleEntries = generateSampleEntries(user.id);
-          setEntries(sampleEntries);
-          localStorage.setItem(`timeEntries_${user.id}`, JSON.stringify(sampleEntries));
-        }
+    const fetchEntries = async () => {
+      if (!user) return;
+
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const url = API_URL + '/api/time_entries';
+
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Accept': 'application/json'
+          },
+        });
+
+        if (!response.ok) throw new Error('Błąd podczas pobierania danych');
+
+        const data = await response.json();
+        setEntries(data);
+      } catch (error) {
+        console.error('Błąd ładowania wpisów:', error);
       }
-    } else {
-      setEntries([]);
-    }
+    };
+
+    fetchEntries();
   }, [user]);
   // Save entries to localStorage when they change
   useEffect(() => {
@@ -119,23 +72,78 @@ export const TimeEntriesProvider: React.FC<{
       localStorage.setItem(`timeEntries_${user.id}`, JSON.stringify(entries));
     }
   }, [entries, user]);
-  const addEntry = (entry: Omit<TimeEntry, 'id'>) => {
+  const addEntry = async (entry: Omit<TimeEntry, 'id'>) => {
     if (!user) return;
-    const newEntry = {
-      ...entry,
-      id: Date.now().toString(),
-      userId: entry.userId || user.id
-    };
-    setEntries([...entries, newEntry]);
+
+    const token = localStorage.getItem('token');
+
+    try {
+      const response = await fetch(API_URL + '/api/time_entries', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(entry),
+      });
+
+      if (!response.ok) throw new Error('Failed to add entry');
+
+      const newEntry: TimeEntry = await response.json();
+      setEntries([...entries, newEntry]);
+    } catch (error) {
+      console.error('Error adding entry:', error);
+    }
   };
-  const updateEntry = (id: string, updatedFields: Partial<TimeEntry>) => {
-    setEntries(entries.map(entry => entry.id === id ? {
-      ...entry,
-      ...updatedFields
-    } : entry));
+  const updateEntry = async (id: string, updatedFields: Partial<TimeEntry>) => {
+    if (!user) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/time_entries/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/merge-patch+json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedFields),
+      });
+
+      if (!response.ok) throw new Error('Nie udało się zaktualizować wpisu');
+
+      const updatedEntry: TimeEntry = await response.json();
+
+      setEntries(prevEntries =>
+          prevEntries.map(entry =>
+              entry.id === id ? updatedEntry : entry
+          )
+      );
+    } catch (error) {
+      console.error('Błąd podczas aktualizacji wpisu:', error);
+    }
   };
-  const deleteEntry = (id: string) => {
-    setEntries(entries.filter(entry => entry.id !== id));
+  const deleteEntry = async (id: string) => {
+    if (!user) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const response = await fetch(API_URL + `/api/time_entries/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Remove entry error');
+
+      setEntries(entries.filter(entry => entry.id !== id));
+    } catch (error) {
+      console.error('Remove entry error:', error);
+    }
   };
   const getEntriesByDateRange = (start: Date, end: Date, userId?: string) => {
     return entries.filter(entry => {

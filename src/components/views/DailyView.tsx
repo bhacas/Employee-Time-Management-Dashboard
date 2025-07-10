@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import { format, parseISO, addDays, subDays } from 'date-fns';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { useTimeEntries } from '../../context/TimeEntriesContext';
+import { useAuth } from '../../context/AuthContext';
 import TimeEntryCard from '../TimeEntryCard';
 const DailyView: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const { user } = useAuth();
   const {
     getDailyEntries
   } = useTimeEntries();
-  const entries = getDailyEntries(selectedDate);
+  const entries = getDailyEntries(selectedDate, user?.id);
   const goToPreviousDay = () => {
     setSelectedDate(prevDate => subDays(prevDate, 1));
   };

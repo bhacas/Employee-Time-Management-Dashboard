@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { format, parseISO, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from 'date-fns';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { useTimeEntries } from '../../context/TimeEntriesContext';
+import { useAuth } from '../../context/AuthContext';
+
 const MonthlyView: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const { user } = useAuth();
   const {
     getMonthlyEntries,
     getDailyEntries
@@ -14,7 +17,7 @@ const MonthlyView: React.FC = () => {
     start: monthStart,
     end: monthEnd
   });
-  const monthlyEntries = getMonthlyEntries(selectedDate);
+  const monthlyEntries = getMonthlyEntries(selectedDate, user?.id);
   const goToPreviousMonth = () => {
     setSelectedDate(prevDate => subMonths(prevDate, 1));
   };
@@ -31,7 +34,7 @@ const MonthlyView: React.FC = () => {
     return `${hours}h ${mins}m`;
   };
   const getDayEntryCount = (day: Date) => {
-    return getDailyEntries(day).length;
+    return getDailyEntries(day, user?.id).length;
   };
   const getDayTotalHours = (day: Date) => {
     const entries = getDailyEntries(day);

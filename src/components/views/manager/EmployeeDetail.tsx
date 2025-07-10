@@ -6,11 +6,6 @@ import { useAuth } from '../../../context/AuthContext';
 import { useTimeEntries } from '../../../context/TimeEntriesContext';
 import TimeEntryCard from '../../TimeEntryCard';
 const EmployeeDetail: React.FC = () => {
-  const {
-    employeeId
-  } = useParams<{
-    employeeId: string;
-  }>();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const {
     getTeamMembers
@@ -20,6 +15,8 @@ const EmployeeDetail: React.FC = () => {
     getDailyEntries
   } = useTimeEntries();
   // Find the employee
+  const { employeeId: employeeIdParam } = useParams<{ employeeId: string }>();
+  const employeeId = Number(employeeIdParam);
   const employee = getTeamMembers().find(member => member.id === employeeId);
   if (!employee) {
     return <div className="text-center py-12">

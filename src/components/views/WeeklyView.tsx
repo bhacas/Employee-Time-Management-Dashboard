@@ -3,8 +3,11 @@ import { format, parseISO, addWeeks, subWeeks, startOfWeek, endOfWeek, eachDayOf
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { useTimeEntries } from '../../context/TimeEntriesContext';
 import TimeEntryCard from '../TimeEntryCard';
+import { useAuth } from '../../context/AuthContext';
+
 const WeeklyView: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const { user } = useAuth();
   const {
     getWeeklyEntries,
     getDailyEntries
@@ -19,7 +22,7 @@ const WeeklyView: React.FC = () => {
     start: weekStart,
     end: weekEnd
   });
-  const weeklyEntries = getWeeklyEntries(selectedDate);
+  const weeklyEntries = getWeeklyEntries(selectedDate, user?.id);
   const goToPreviousWeek = () => {
     setSelectedDate(prevDate => subWeeks(prevDate, 1));
   };
@@ -60,7 +63,7 @@ const WeeklyView: React.FC = () => {
       </div>
       <div className="space-y-6">
         {daysInWeek.map(day => {
-        const dayEntries = getDailyEntries(day);
+        const dayEntries = getDailyEntries(day, user?.id);
         const dayTotalDuration = dayEntries.reduce((total, entry) => total + entry.duration, 0);
         return <div key={format(day, 'yyyy-MM-dd')} className="bg-white rounded-lg shadow-sm p-4">
               <div className="flex justify-between items-center mb-3">

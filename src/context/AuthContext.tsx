@@ -1,11 +1,12 @@
-import React, { useEffect, useState, createContext, useContext } from 'react';
+import React, {createContext, useContext, useEffect, useState} from 'react';
+
 interface User {
   id: string;
   name: string;
   email: string;
   role: 'employee' | 'manager';
   managerId?: string;
-  teamMembers?: string[]; // Only for managers
+  teamMembers?: User[]; // Only for managers
 }
 interface AuthContextType {
   user: User | null;
@@ -16,38 +17,8 @@ interface AuthContextType {
   getTeamMembers: () => User[];
 }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-// Sample team data for demonstration
-const sampleUsers: User[] = [{
-  id: '1',
-  name: 'John Doe',
-  email: 'john@example.com',
-  role: 'manager',
-  teamMembers: ['2', '3', '4']
-}, {
-  id: '2',
-  name: 'Jane Smith',
-  email: 'jane@example.com',
-  role: 'employee',
-  managerId: '1'
-}, {
-  id: '3',
-  name: 'Bob Johnson',
-  email: 'bob@example.com',
-  role: 'employee',
-  managerId: '1'
-}, {
-  id: '4',
-  name: 'Alice Williams',
-  email: 'alice@example.com',
-  role: 'employee',
-  managerId: '1'
-}, {
-  id: '5',
-  name: 'Regular User',
-  email: 'user@example.com',
-  role: 'employee',
-  managerId: '1'
-}];
+export const API_URL = import.meta.env.VITE_API_URL;
+
 export const AuthProvider: React.FC<{
   children: React.ReactNode;
 }> = ({
@@ -63,24 +34,57 @@ export const AuthProvider: React.FC<{
   }, []);
   // Mock login function - in a real app, this would call an API
   const login = async (email: string, password: string) => {
-    // Simple validation
-    if (!email || !password) {
+    try {
+      const response = await fetch(API_URL + '/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
+      const token = data.token;
+
+      localStorage.setItem('token', token);
+
+      const userResponse = await fetch(API_URL + '/api/logged', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!userResponse.ok) {
+        return false;
+      }
+
+      const userData = await userResponse.json();
+
+      const loginUser: User = {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        role: userData.role,
+        managerId: userData.managerId,
+        teamMembers: userData.teamMembers
+      };
+
+      localStorage.setItem('user', JSON.stringify(loginUser));
+      setUser(loginUser);
+
+      return true;
+    } catch (error) {
       return false;
     }
-    // In a real app, this would be an API call
-    // For demo, check if it's one of our sample users
-    const foundUser = sampleUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-    // If no matching user, create a regular employee
-    const loginUser = foundUser || {
-      id: '999',
-      name: email.split('@')[0],
-      email,
-      role: 'employee' as const
-    };
-    // Store user in local storage
-    localStorage.setItem('user', JSON.stringify(loginUser));
-    setUser(loginUser);
-    return true;
   };
   const logout = () => {
     localStorage.removeItem('user');
@@ -90,7 +94,7 @@ export const AuthProvider: React.FC<{
     if (!user || user.role !== 'manager' || !user.teamMembers) {
       return [];
     }
-    return sampleUsers.filter(u => user.teamMembers?.includes(u.id));
+    return user.teamMembers;
   };
   return <AuthContext.Provider value={{
     user,
