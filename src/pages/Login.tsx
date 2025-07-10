@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ClockIcon, LockIcon, MailIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,6 +12,10 @@ const Login: React.FC = () => {
     login,
     isAuthenticated
   } = useAuth();
+  const {
+    showSuccess,
+    showError
+  } = useToast();
   const navigate = useNavigate();
   // If already authenticated, redirect to dashboard
   useEffect(() => {
@@ -27,12 +32,15 @@ const Login: React.FC = () => {
     try {
       const success = await login(email, password);
       if (success) {
+        showSuccess('Successfully logged in!');
         navigate('/dashboard');
       } else {
         setError('Invalid email or password');
+        showError('Invalid email or password');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
+      showError('An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }

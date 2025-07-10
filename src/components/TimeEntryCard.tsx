@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ClockIcon, EditIcon, TrashIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { TimeEntry, useTimeEntries } from '../context/TimeEntriesContext';
+import { useToast } from '../context/ToastContext';
 import NewEntryModal from './modals/NewEntryModal';
 interface TimeEntryCardProps {
   entry: TimeEntry;
@@ -13,6 +14,9 @@ const TimeEntryCard: React.FC<TimeEntryCardProps> = ({
   const {
     deleteEntry
   } = useTimeEntries();
+  const {
+    showSuccess
+  } = useToast();
   const formatDuration = (minutes: number) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
@@ -21,6 +25,7 @@ const TimeEntryCard: React.FC<TimeEntryCardProps> = ({
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this time entry?')) {
       deleteEntry(entry.id);
+      showSuccess('Time entry deleted');
     }
   };
   return <div className="bg-white rounded-lg shadow-sm p-4 mb-3">

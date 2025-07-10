@@ -15,7 +15,8 @@
     "react-router-dom": "^6.26.2",
     "date-fns": "^4.0.0",
     "lucide-react": "^0.441.0",
-    "recharts": "^2.12.7"
+    "recharts": "^2.12.7",
+    "sonner": "^2.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.18",

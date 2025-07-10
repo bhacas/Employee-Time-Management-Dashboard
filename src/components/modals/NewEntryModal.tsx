@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { XIcon } from 'lucide-react';
 import { useTimeEntries } from '../../context/TimeEntriesContext';
+import { useToast } from '../../context/ToastContext';
 import { format } from 'date-fns';
 interface NewEntryModalProps {
   isOpen: boolean;
@@ -16,6 +17,10 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({
     addEntry,
     updateEntry
   } = useTimeEntries();
+  const {
+    showSuccess,
+    showError
+  } = useToast();
   const [date, setDate] = useState(entryToEdit?.date || format(new Date(), 'yyyy-MM-dd'));
   const [startTime, setStartTime] = useState(entryToEdit?.startTime || '09:00');
   const [endTime, setEndTime] = useState(entryToEdit?.endTime || '17:00');
@@ -32,7 +37,7 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({
     e.preventDefault();
     const duration = calculateDuration(startTime, endTime);
     if (duration <= 0) {
-      alert('End time must be after start time');
+      showError('End time must be after start time');
       return;
     }
     const entryData = {
@@ -46,8 +51,10 @@ const NewEntryModal: React.FC<NewEntryModalProps> = ({
     };
     if (entryToEdit) {
       updateEntry(entryToEdit.id, entryData);
+      showSuccess('Time entry updated successfully');
     } else {
       addEntry(entryData);
+      showSuccess('Time entry added successfully');
     }
     onClose();
   };
