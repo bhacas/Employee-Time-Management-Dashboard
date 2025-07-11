@@ -1,4 +1,5 @@
 import React, {createContext, useContext, useEffect, useState} from 'react';
+import { useConfig } from '../context/ConfigContext';
 
 interface User {
   id: string;
@@ -17,13 +18,13 @@ interface AuthContextType {
   getTeamMembers: () => User[];
 }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-export const API_URL = import.meta.env.VITE_API_URL;
 
 export const AuthProvider: React.FC<{
   children: React.ReactNode;
 }> = ({
   children
 }) => {
+  const { config } = useConfig();
   const [user, setUser] = useState<User | null>(null);
   // Check for existing user session on mount
   useEffect(() => {
@@ -35,7 +36,7 @@ export const AuthProvider: React.FC<{
   // Mock login function - in a real app, this would call an API
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch(API_URL + '/api/login', {
+      const response = await fetch(`${config?.VITE_API_URL}/api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,7 +58,7 @@ export const AuthProvider: React.FC<{
 
       localStorage.setItem('token', token);
 
-      const userResponse = await fetch(API_URL + '/api/logged', {
+      const userResponse = await fetch(`${config?.VITE_API_URL}/api/logged`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

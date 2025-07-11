@@ -1,6 +1,8 @@
 import React, { useEffect, useState, createContext, useContext } from 'react';
 import { format, parseISO, startOfMonth, endOfMonth, startOfWeek, endOfWeek, startOfDay, endOfDay } from 'date-fns';
 import { useAuth } from './AuthContext';
+import { useConfig } from '../context/ConfigContext';
+
 
 export interface TimeEntry {
   id: string;
@@ -25,7 +27,6 @@ interface TimeEntriesContextType {
   getAllTeamEntries: () => TimeEntry[];
 }
 const TimeEntriesContext = createContext<TimeEntriesContextType | undefined>(undefined);
-export const API_URL = import.meta.env.VITE_API_URL;
 
 export const TimeEntriesProvider: React.FC<{
   children: React.ReactNode;
@@ -36,6 +37,7 @@ export const TimeEntriesProvider: React.FC<{
     user,
     getTeamMembers
   } = useAuth();
+  const { config } = useConfig();
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   // Load entries when user changes
   useEffect(() => {
@@ -46,7 +48,7 @@ export const TimeEntriesProvider: React.FC<{
       if (!token) return;
 
       try {
-        const url = API_URL + '/api/time_entries';
+        const url = `${config?.VITE_API_URL}/api/time_entries`;
 
         const response = await fetch(url, {
           headers: {
@@ -78,7 +80,7 @@ export const TimeEntriesProvider: React.FC<{
     const token = localStorage.getItem('token');
 
     try {
-      const response = await fetch(API_URL + '/api/time_entries', {
+      const response = await fetch(`${config?.VITE_API_URL}/api/time_entries`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +104,7 @@ export const TimeEntriesProvider: React.FC<{
     if (!token) return;
 
     try {
-      const response = await fetch(`${API_URL}/api/time_entries/${id}`, {
+      const response = await fetch(`${config?.VITE_API_URL}/api/time_entries/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/merge-patch+json',
@@ -131,7 +133,7 @@ export const TimeEntriesProvider: React.FC<{
     if (!token) return;
 
     try {
-      const response = await fetch(API_URL + `/api/time_entries/${id}`, {
+      const response = await fetch(`${config?.VITE_API_URL}/api/time_entries/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
