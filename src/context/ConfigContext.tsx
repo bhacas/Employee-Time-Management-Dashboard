@@ -16,9 +16,9 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('/config.json')
+        fetch('/timetrack/config.json')
             .then((res) => {
-                if (!res.ok) throw new Error('Błąd ładowania config.json');
+                if (!res.ok) throw new Error('Error fetching config');
                 return res.json();
             })
             .then((data: AppConfig) => setConfig(data))

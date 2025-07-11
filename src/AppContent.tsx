@@ -13,11 +13,11 @@ const AppContent = () => {
     const { config, loading } = useConfig();
 
     if (loading) {
-        return <div className="p-8 text-center">Ładowanie konfiguracji...</div>;
+        return <div className="p-8 text-center">Config loading...</div>;
     }
 
     if (!config) {
-        return <div className="p-8 text-center text-red-500">Błąd ładowania konfiguracji.</div>;
+        return <div className="p-8 text-center text-red-500">Error while loading config</div>;
     }
 
     return (
