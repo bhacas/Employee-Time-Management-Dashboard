@@ -21,7 +21,7 @@ const AppContent = () => {
     }
 
     return (
-        <BrowserRouter>
+        <BrowserRouter basename="/timetrack">
             <AuthProvider>
                 <TimeEntriesProvider>
                     <ToastProvider>
