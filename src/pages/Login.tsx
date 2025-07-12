@@ -91,11 +91,13 @@ const Login: React.FC = () => {
           </div>
           <div className="text-sm text-center space-y-2">
             <p className="text-gray-500">
-              For demo purposes, any email and password will work
+              For demo purposes
             </p>
             <p className="text-gray-500">
-              Try <span className="font-medium">john@example.com</span> to login
-              as a manager
+              Try <span className="font-medium">employee@test.com</span> and password <span className="font-medium">employee</span> to login as employee
+            </p>
+            <p className="text-gray-500">
+              Try <span className="font-medium">manager@test.com</span> and password <span className="font-medium">manager</span> to login as a manager
             </p>
           </div>
         </form>

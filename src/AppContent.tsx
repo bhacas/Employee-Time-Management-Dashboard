@@ -8,6 +8,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useConfig } from './context/ConfigContext';
+import AuthPing from "./context/AuthPing.tsx";
+
 
 const AppContent = () => {
     const { config, loading } = useConfig();
@@ -23,6 +25,7 @@ const AppContent = () => {
     return (
         <BrowserRouter basename="/timetrack">
             <AuthProvider>
+                <AuthPing />
                 <TimeEntriesProvider>
                     <ToastProvider>
                         <div className="w-full min-h-screen bg-gray-50">
